@@ -10,8 +10,7 @@ MODEL_NAME="spice"
 # Default Argument Values
 SAMPLES_PER_INPUT=128
 OUTPUT_TENSOR_NAMES="pitch,uncertainty"
-BYPASS_ARGUMENTS="--batch_size=1 --total_max_samples=1000"
-BATCH_SIZE="1"
+BYPASS_ARGUMENTS=""
 MODEL_DIR="/models/tf_hub/"
 DATA_DIR="/tmp/"
 NUM_ITERATIONS="1000"
@@ -24,8 +23,7 @@ do
         MODEL_NAME="${arg#*=}"
         shift # Remove --model_name from processing
         ;;
-        --batch_size=*)b
-        BATCH_SIZE="${arg#*=}"
+        --batch_size=*)
         shift # Remove --batch_size= from processing
         ;;
         --num_iterations=*)
@@ -44,11 +42,20 @@ do
         MODEL_DIR="${arg#*=}"
         shift # Remove --input_saved_model_dir= from processing
         ;;
+	--total_max_samples=*)
+        shift # Remove --total_max_samples= from processing
+        ;;
+
         *)
         BYPASS_ARGUMENTS=" ${BYPASS_ARGUMENTS} ${arg}"
         ;;
     esac
 done
+
+# Set model specific values required for infer.py
+BATCH_SIZE="1"
+MAX_SAMPLES="1"
+
 
 echo -e "\n********************************************************************"
 echo "[*] MODEL_NAME: ${MODEL_NAME}"
@@ -56,13 +63,14 @@ echo ""
 echo "[*] DATA_DIR: ${DATA_DIR}"
 echo "[*] MODEL_DIR: ${MODEL_DIR}"
 echo ""
-echo "[*] BATCH_SIZE: ${BATCH_SIZE}"
-echo ""
 echo "[*] SAMPLES_PER_INPUT: ${SAMPLES_PER_INPUT}"
 echo "[*] OUTPUT_TENSOR_NAMES: ${OUTPUT_TENSOR_NAMES}"
 echo ""
 echo "[*] BYPASS_ARGUMENTS: $(echo \"${BYPASS_ARGUMENTS}\" | tr -s ' ')"
-
+echo ""
+echo "Custom values automatically set"
+echo "[*] BATCH_SIZE: ${BATCH_SIZE}"
+echo "[*] MAX_SAMPLES: ${MAX_SAMPLES}"
 echo -e "********************************************************************\n"
 
 MODEL_DIR="${MODEL_DIR}/${MODEL_NAME}/"
@@ -77,6 +85,9 @@ if [[ ! -d ${MODEL_DIR} ]]; then
     exit 1
 fi
 
+
+
+
 # Dataset Directory
 
 python ${BASE_DIR}/infer.py \
@@ -84,7 +95,9 @@ python ${BASE_DIR}/infer.py \
     --calib_data_dir=${DATA_DIR} \
     --input_saved_model_dir=${MODEL_DIR} \
     --output_tensors_name=${OUTPUT_TENSOR_NAMES} \
+    --batch_size ${BATCH_SIZE} \
     `# The following is set because we will be running synthetic benchmarks` \
     --use_synthetic_data  \
     --num_iterations=${NUM_ITERATIONS} \
+    --total_max_samples=${MAX_SAMPLES} \
     ${@}
