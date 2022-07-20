@@ -10,8 +10,11 @@ MODEL_NAME="spice"
 # Default Argument Values
 SAMPLES_PER_INPUT=128
 OUTPUT_TENSOR_NAMES="pitch,uncertainty"
-BYPASS_ARGUMENTS="--batch_size"
+BYPASS_ARGUMENTS="--batch_size=1 --total_max_samples=1000"
 BATCH_SIZE="1"
+MODEL_DIR="/models/tf_hub/"
+DATA_DIR="/tmp/"
+NUM_ITERATIONS="1000"
 
 # Loop through arguments and process them
 for arg in "$@"
